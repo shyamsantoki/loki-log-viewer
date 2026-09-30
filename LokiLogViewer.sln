@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LokiLogViewer", "src\LokiLo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LokiLogViewer.Client", "src\LokiLogViewer.Client\LokiLogViewer.Client.csproj", "{4CADCC10-14EE-4BE8-B869-BDBA5F9579E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LokiLogViewer.Shared", "src\LokiLogViewer.Shared\LokiLogViewer.Shared.csproj", "{02CFA365-C663-461E-93D7-A5CDA79322D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LokiLogViewer.Shared.Tests", "tests\LokiLogViewer.Shared.Tests\LokiLogViewer.Shared.Tests.csproj", "{89388F4A-07EA-4AE9-B924-2308FF88201E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,30 @@ Global
 		{4CADCC10-14EE-4BE8-B869-BDBA5F9579E7}.Release|x64.Build.0 = Release|Any CPU
 		{4CADCC10-14EE-4BE8-B869-BDBA5F9579E7}.Release|x86.ActiveCfg = Release|Any CPU
 		{4CADCC10-14EE-4BE8-B869-BDBA5F9579E7}.Release|x86.Build.0 = Release|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Debug|x64.Build.0 = Debug|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Debug|x86.Build.0 = Debug|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Release|x64.ActiveCfg = Release|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Release|x64.Build.0 = Release|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Release|x86.ActiveCfg = Release|Any CPU
+		{02CFA365-C663-461E-93D7-A5CDA79322D8}.Release|x86.Build.0 = Release|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Debug|x64.Build.0 = Debug|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Debug|x86.Build.0 = Debug|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Release|x64.ActiveCfg = Release|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Release|x64.Build.0 = Release|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Release|x86.ActiveCfg = Release|Any CPU
+		{89388F4A-07EA-4AE9-B924-2308FF88201E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,5 +78,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FB0FD47A-3343-4D42-A137-B23EA6E226B2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{4CADCC10-14EE-4BE8-B869-BDBA5F9579E7} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{02CFA365-C663-461E-93D7-A5CDA79322D8} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{89388F4A-07EA-4AE9-B924-2308FF88201E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
