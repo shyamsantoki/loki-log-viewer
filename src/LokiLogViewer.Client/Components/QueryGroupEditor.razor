@@ -1,29 +1,31 @@
 <div class="query-group @(Group.Operator == GroupOperator.And ? "op-and" : "op-or")">
     <div class="query-group-header">
-        <button type="button"
-                class="btn btn-sm toggle-btn @(Group.Negate ? "btn-danger" : "btn-outline-secondary")"
-                title="Negate this whole group"
-                @onclick="() => Group.Negate = !Group.Negate">
-            NOT
-        </button>
+        <span class="match-label">Match</span>
 
-        <div class="btn-group btn-group-sm" role="group" aria-label="AND / OR">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Match all or any">
             <button type="button" class="btn @(Group.Operator == GroupOperator.And ? "btn-primary" : "btn-outline-primary")"
                     @onclick="() => Group.Operator = GroupOperator.And">
-                AND
+                ALL
             </button>
             <button type="button" class="btn @(Group.Operator == GroupOperator.Or ? "btn-warning" : "btn-outline-warning")"
                     @onclick="() => Group.Operator = GroupOperator.Or">
-                OR
+                ANY
             </button>
         </div>
+
+        <span class="match-label">of the following:</span>
+
+        <label class="exclude-toggle">
+            <input type="checkbox" @bind="Group.Negate" />
+            Exclude these matches
+        </label>
 
         <span class="spacer"></span>
 
         @if (!IsRoot)
         {
-            <button type="button" class="btn btn-sm btn-outline-danger icon-btn" title="Remove group" @onclick="OnRemove">
-                &#x2715;
+            <button type="button" class="btn btn-sm btn-outline-danger icon-btn" title="Remove this group" @onclick="OnRemove">
+                &#x2715; Remove group
             </button>
         }
     </div>
@@ -42,9 +44,16 @@
         }
     </div>
 
+    @if (Group.Children.Count == 0)
+    {
+        <p class="query-empty-hint">No conditions yet - add one below to start narrowing down your logs.</p>
+    }
+
     <div class="query-group-actions">
-        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddCondition">+ Condition</button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddGroup">+ Group</button>
+        <button type="button" class="btn btn-sm btn-primary" @onclick="AddCondition">+ Add condition</button>
+        <button type="button" class="btn btn-sm btn-link text-muted" @onclick="AddGroup">
+            + Add a nested group (advanced)
+        </button>
     </div>
 </div>
 

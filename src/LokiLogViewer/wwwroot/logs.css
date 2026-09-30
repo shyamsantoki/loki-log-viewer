@@ -5,6 +5,11 @@
 }
 
 .logs-page h1 {
+    margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
     margin-bottom: 1.25rem;
 }
 
@@ -36,6 +41,28 @@
 
 .query-group-header .spacer {
     flex: 1;
+}
+
+.match-label {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.exclude-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #495057;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.query-empty-hint {
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin: 0 0 0.6rem;
 }
 
 .query-group-children {
@@ -78,10 +105,10 @@
     width: auto;
 }
 
-.toggle-btn {
-    font-size: 0.75rem;
+.query-row-prefix {
+    font-size: 0.85rem;
+    color: #6c757d;
     font-weight: 600;
-    padding: 0.15rem 0.5rem;
 }
 
 .icon-btn {
@@ -102,7 +129,7 @@
     padding: 0.85rem 1rem;
     margin: 1rem 0;
     position: sticky;
-    top: 3.6rem;
+    top: 3.5rem;
     z-index: 2;
 }
 

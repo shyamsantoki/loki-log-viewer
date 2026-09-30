@@ -1,13 +1,14 @@
-@page "/logs"
+@page "/"
 @* Prerendering runs on the server, which doesn't have LogApiClient registered (only the
    Client's WASM DI container does) - this page is interactive-only anyway, so skip it. *@
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 @inject LogApiClient Api
 
-<PageTitle>Logs</PageTitle>
+<PageTitle>LokiLogViewer</PageTitle>
 
 <div class="logs-page">
-    <h1>Logs</h1>
+    <h1>Search your logs</h1>
+    <p class="page-subtitle">Build a filter below, pick a time range, then click Search.</p>
 
     <QueryGroupEditor Group="_root" IsRoot="true" />
 
@@ -23,18 +24,18 @@
         </div>
 
         <div class="field">
-            <label>Limit per page</label>
+            <label>Max results per page</label>
             <input type="number" class="form-control form-control-sm" min="1" max="1000" style="width: 6rem" @bind="_limit" />
         </div>
 
         <span class="spacer" style="flex:1"></span>
 
-        <button type="button" class="btn btn-primary" @onclick="RunAsync" disabled="@_loading">
+        <button type="button" class="btn btn-primary btn-lg" @onclick="RunAsync" disabled="@_loading">
             @if (_loading)
             {
                 <span class="spinner-inline"></span>
             }
-            Run
+            Search logs
         </button>
     </div>
 
@@ -46,15 +47,15 @@
     @if (_entries.Count > 0)
     {
         <div class="results-summary">
-            <strong>@_entries.Count</strong> log line@(_entries.Count == 1 ? "" : "s")
+            Showing <strong>@_entries.Count</strong> log line@(_entries.Count == 1 ? "" : "s")
         </div>
 
         <table class="log-results table table-sm table-hover">
             <thead>
                 <tr>
-                    <th>Timestamp</th>
+                    <th>Time</th>
                     <th>Labels</th>
-                    <th>Line</th>
+                    <th>Message</th>
                 </tr>
             </thead>
             <tbody>
@@ -82,14 +83,14 @@
                     {
                         <span class="spinner-inline"></span>
                     }
-                    Load more
+                    Load more logs
                 </button>
             </div>
         }
     }
     else if (_hasSearched && !_loading && _error is null)
     {
-        <p class="text-muted">No log lines matched.</p>
+        <p class="text-muted">No log lines matched. Try widening the time range or removing a condition.</p>
     }
 </div>
 
@@ -105,11 +106,24 @@
 
     private Task RunAsync()
     {
+        if (!HasAnyCondition(_root))
+        {
+            _error = "Add at least one condition above, then search again.";
+            return Task.CompletedTask;
+        }
+
         _entries.Clear();
         _cursor = null;
         _hasSearched = true;
         return FetchPageAsync(cursor: null);
     }
+
+    private static bool HasAnyCondition(QueryNodeEditor node) => node switch
+    {
+        ConditionEditor condition => condition.IsComplete,
+        GroupEditor group => group.Children.Any(HasAnyCondition),
+        _ => false
+    };
 
     private Task LoadMoreAsync() => FetchPageAsync(_cursor);
 

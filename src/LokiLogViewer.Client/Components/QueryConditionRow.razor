@@ -1,14 +1,9 @@
 @inject LogApiClient Api
 
 <div class="query-row">
-    <button type="button"
-            class="btn btn-sm toggle-btn @(Condition.Negate ? "btn-danger" : "btn-outline-secondary")"
-            title="Negate this condition"
-            @onclick="() => Condition.Negate = !Condition.Negate">
-        NOT
-    </button>
+    <span class="query-row-prefix">Where</span>
 
-    <input type="text" class="form-control form-control-sm field-label" list="@_labelsListId" placeholder="label"
+    <input type="text" class="form-control form-control-sm field-label" list="@_labelsListId" placeholder="field, e.g. namespace"
            @bind="Condition.Label" @bind:event="onchange" @bind:after="OnLabelChangedAsync" />
     <datalist id="@_labelsListId">
         @foreach (var label in _labelOptions)
@@ -18,10 +13,10 @@
     </datalist>
 
     <select class="form-select form-select-sm field-op" @bind="Condition.Operator">
-        <option value="@LabelOperator.Equals">=</option>
-        <option value="@LabelOperator.NotEquals">!=</option>
-        <option value="@LabelOperator.Matches">=~ (regex)</option>
-        <option value="@LabelOperator.NotMatches">!~ (regex)</option>
+        <option value="@LabelOperator.Equals">is</option>
+        <option value="@LabelOperator.NotEquals">is not</option>
+        <option value="@LabelOperator.Matches">matches pattern</option>
+        <option value="@LabelOperator.NotMatches">doesn't match pattern</option>
     </select>
 
     <input type="text" class="form-control form-control-sm field-value" list="@_valuesListId" placeholder="value"
@@ -33,7 +28,7 @@
         }
     </datalist>
 
-    <button type="button" class="btn btn-sm btn-outline-danger icon-btn ms-auto" title="Remove condition" @onclick="OnRemove">
+    <button type="button" class="btn btn-sm btn-outline-danger icon-btn ms-auto" title="Remove this condition" @onclick="OnRemove">
         &#x2715;
     </button>
 </div>
