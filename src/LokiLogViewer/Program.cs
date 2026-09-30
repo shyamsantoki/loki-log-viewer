@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text;
 using LokiLogViewer.Client.Pages;
 using LokiLogViewer.Components;
 using LokiLogViewer.Endpoints;
@@ -28,6 +29,12 @@ builder.Services.AddHttpClient<LokiClient>((sp, client) =>
     if (!string.IsNullOrEmpty(options.BearerToken))
     {
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.BearerToken);
+    }
+    else if (!string.IsNullOrEmpty(options.BasicAuthUsername) && !string.IsNullOrEmpty(options.BasicAuthPassword))
+    {
+        var credentials = Convert.ToBase64String(
+            Encoding.UTF8.GetBytes($"{options.BasicAuthUsername}:{options.BasicAuthPassword}"));
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", credentials);
     }
 });
 
