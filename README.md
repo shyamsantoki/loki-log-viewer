@@ -54,7 +54,7 @@ src/
     Loki/                         LokiClient, LokiOptions, raw Loki API DTOs
     Search/                       LogSearchService (orchestrates Loki calls, merges results)
     Endpoints/                    Minimal API endpoints under /api/logs
-    Components/                   Razor components rendered server-side (layout, static pages)
+    Components/                   Server-rendered layout shell (App, MainLayout) and the error page
     wwwroot/                      Server-side static assets (app.css, logs.css)
   LokiLogViewer.Client/            Blazor WebAssembly client
     Pages/Logs.razor              The log viewer page (routed at "/")
