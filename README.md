@@ -41,7 +41,7 @@ the client and the API it calls are served from the same origin.
 | Project | Kind | Responsibility |
 |---|---|---|
 | `LokiLogViewer` | ASP.NET Core host | Serves the compiled Blazor client, proxies Loki, hosts `/api/logs/*` |
-| `LokiLogViewer.Client` | Blazor WebAssembly | The `/logs` page and query builder UI, runs in the browser |
+| `LokiLogViewer.Client` | Blazor WebAssembly | The single log-search page and query builder UI, runs in the browser |
 | `LokiLogViewer.Shared` | Class library | The query tree model, the LogQL builder, and the request/response DTOs both sides speak |
 | `LokiLogViewer.Shared.Tests` | xUnit | Unit tests for the LogQL builder |
 
@@ -57,7 +57,7 @@ src/
     Components/                   Razor components rendered server-side (layout, static pages)
     wwwroot/                      Server-side static assets (app.css, logs.css)
   LokiLogViewer.Client/            Blazor WebAssembly client
-    Pages/Logs.razor              The log viewer page
+    Pages/Logs.razor              The log viewer page (routed at "/")
     Components/                   QueryGroupEditor, QueryConditionRow (the recursive builder UI)
     Query/QueryNodeEditor.cs      Mutable editor model for the query tree, used only by the UI
     Services/                     LogApiClient (typed HttpClient wrapper) + its exception type
@@ -82,8 +82,8 @@ dotnet run --project src/LokiLogViewer
 
 This builds and serves both the API and the WASM client from one process. The URL it
 listens on comes from `src/LokiLogViewer/Properties/launchSettings.json`
-(`https://localhost:7146` / `http://localhost:5122` by default) - open that URL and go
-to the **Logs** nav link, or straight to `/logs`.
+(`https://localhost:7146` / `http://localhost:5122` by default) - open that URL; the
+log search page is the only page, at `/`.
 
 Until [Loki is configured](#configuring-the-loki-connection), the app starts fine but
 every search shows a clean "Could not reach Loki" error - that's the missing
@@ -121,18 +121,23 @@ this app can detect.
 
 ## Using the query builder
 
-The `/logs` page has three parts:
+The page has three parts:
 
-1. **The filter tree.** Start with one AND group. Click **+ Condition** to add a
-   `label <op> value` row, or **+ Group** to nest another AND/OR group inside. Each
-   row and each group has its own **NOT** toggle, so you can express things like
-   `namespace="prod" AND NOT (container="a" OR container="b")`. Label and value inputs
-   are autocomplete text boxes backed by Loki's `/labels` and `/label/{name}/values`,
-   scoped to whatever other conditions are already set in the same group.
-2. **Time range and limit**, then **Run**.
+1. **The filter.** Start with one group that reads "Match ALL of the following:".
+   Click **+ Add condition** to add a `field is value` row - the operator dropdown
+   covers `is` / `is not` / `matches pattern` / `doesn't match pattern`, so negation is
+   just a choice of operator rather than a separate control. Field and value inputs are
+   autocomplete text boxes backed by Loki's `/labels` and `/label/{name}/values`, scoped
+   to whatever other conditions are already set in the same group. Switch **ALL** to
+   **ANY** to match any one of the conditions instead of all of them, and check
+   **Exclude these matches** to invert a whole group. **+ Add a nested group (advanced)**
+   is there for combining ALL/ANY logic (e.g. `namespace is prod AND (container is a OR
+   container is b)`) but is deliberately out of the way for the common case, which is
+   just a flat list of conditions.
+2. **Time range and result limit**, then **Search logs**.
 3. **Results**, with labels shown as small badges (colored when a `level` or
-   `detected_level` label is present) and a **Load more** button that fetches the next
-   page using the previous page's cursor.
+   `detected_level` label is present) and a **Load more logs** button that fetches the
+   next page using the previous page's cursor.
 
 ## API reference
 
