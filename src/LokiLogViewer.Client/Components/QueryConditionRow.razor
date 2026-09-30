@@ -1,0 +1,104 @@
+@inject LogApiClient Api
+
+<div class="query-row">
+    <label class="negate-toggle" title="Negate this condition">
+        <input type="checkbox" @bind="Condition.Negate" /> NOT
+    </label>
+
+    <input type="text" list="@_labelsListId" placeholder="label"
+           @bind="Condition.Label" @bind:event="onchange" @bind:after="OnLabelChangedAsync" />
+    <datalist id="@_labelsListId">
+        @foreach (var label in _labelOptions)
+        {
+            <option value="@label"></option>
+        }
+    </datalist>
+
+    <select @bind="Condition.Operator">
+        <option value="@LabelOperator.Equals">=</option>
+        <option value="@LabelOperator.NotEquals">!=</option>
+        <option value="@LabelOperator.Matches">=~ (regex)</option>
+        <option value="@LabelOperator.NotMatches">!~ (regex)</option>
+    </select>
+
+    <input type="text" list="@_valuesListId" placeholder="value" @bind="Condition.Value" @bind:event="oninput" />
+    <datalist id="@_valuesListId">
+        @foreach (var value in _valueOptions)
+        {
+            <option value="@value"></option>
+        }
+    </datalist>
+
+    <button type="button" class="remove-btn" title="Remove condition" @onclick="OnRemove">&#x2715;</button>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ConditionEditor Condition { get; set; } = null!;
+    [Parameter, EditorRequired] public GroupEditor ParentGroup { get; set; } = null!;
+    [Parameter] public EventCallback OnRemove { get; set; }
+
+    private readonly string _labelsListId = $"labels-{Guid.NewGuid():N}";
+    private readonly string _valuesListId = $"values-{Guid.NewGuid():N}";
+
+    private IReadOnlyList<string> _labelOptions = [];
+    private IReadOnlyList<string> _valueOptions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshLabelsAsync();
+        if (!string.IsNullOrEmpty(Condition.Label))
+        {
+            await RefreshValuesAsync();
+        }
+    }
+
+    private async Task OnLabelChangedAsync()
+    {
+        Condition.Value = "";
+        await RefreshValuesAsync();
+    }
+
+    private async Task RefreshLabelsAsync()
+    {
+        try
+        {
+            _labelOptions = await Api.GetLabelsAsync(BuildContext(), CancellationToken.None);
+        }
+        catch (LogApiException)
+        {
+            _labelOptions = [];
+        }
+    }
+
+    private async Task RefreshValuesAsync()
+    {
+        if (string.IsNullOrEmpty(Condition.Label))
+        {
+            _valueOptions = [];
+            return;
+        }
+
+        try
+        {
+            _valueOptions = await Api.GetLabelValuesAsync(Condition.Label, BuildContext(), CancellationToken.None);
+        }
+        catch (LogApiException)
+        {
+            _valueOptions = [];
+        }
+    }
+
+    // Scoped by the last day, independent of whatever range the log search itself uses - good
+    // enough for populating pickers without threading the search time range through every row.
+    private LabelsRequest BuildContext()
+    {
+        var siblingConditions = ParentGroup.Children
+            .OfType<ConditionEditor>()
+            .Where(c => c != Condition && c.IsComplete)
+            .Select(c => (ConditionNode)c.ToQueryNode())
+            .ToList();
+
+        var to = DateTimeOffset.UtcNow;
+        return new LabelsRequest(siblingConditions, to.AddHours(-24), to);
+    }
+}

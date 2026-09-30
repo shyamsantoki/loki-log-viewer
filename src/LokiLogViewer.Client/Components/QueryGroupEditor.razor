@@ -1,0 +1,46 @@
+<div class="query-group">
+    <div class="query-group-header">
+        <label title="Negate this whole group">
+            <input type="checkbox" @bind="Group.Negate" /> NOT
+        </label>
+
+        <select @bind="Group.Operator">
+            <option value="@GroupOperator.And">AND</option>
+            <option value="@GroupOperator.Or">OR</option>
+        </select>
+
+        @if (!IsRoot)
+        {
+            <button type="button" class="remove-btn" @onclick="OnRemove">Remove group</button>
+        }
+    </div>
+
+    <div class="query-group-children">
+        @foreach (var child in Group.Children.ToList())
+        {
+            @if (child is ConditionEditor condition)
+            {
+                <QueryConditionRow Condition="condition" ParentGroup="Group" OnRemove="() => RemoveChild(child)" />
+            }
+            else if (child is GroupEditor group)
+            {
+                <QueryGroupEditor Group="group" OnRemove="() => RemoveChild(child)" />
+            }
+        }
+    </div>
+
+    <div class="query-group-actions">
+        <button type="button" @onclick="AddCondition">+ Condition</button>
+        <button type="button" @onclick="AddGroup">+ Group</button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public GroupEditor Group { get; set; } = null!;
+    [Parameter] public bool IsRoot { get; set; }
+    [Parameter] public EventCallback OnRemove { get; set; }
+
+    private void AddCondition() => Group.Children.Add(new ConditionEditor());
+    private void AddGroup() => Group.Children.Add(new GroupEditor());
+    private void RemoveChild(QueryNodeEditor child) => Group.Children.Remove(child);
+}

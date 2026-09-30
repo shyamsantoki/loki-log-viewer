@@ -1,0 +1,107 @@
+@page "/logs"
+@* Prerendering runs on the server, which doesn't have LogApiClient registered (only the
+   Client's WASM DI container does) - this page is interactive-only anyway, so skip it. *@
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@inject LogApiClient Api
+
+<PageTitle>Logs</PageTitle>
+
+<h1>Logs</h1>
+
+<QueryGroupEditor Group="_root" IsRoot="true" />
+
+<div class="query-toolbar">
+    <label>
+        Time range:
+        <select @bind="_selectedRangeMinutes">
+            <option value="15">Last 15 minutes</option>
+            <option value="60">Last 1 hour</option>
+            <option value="360">Last 6 hours</option>
+            <option value="1440">Last 24 hours</option>
+        </select>
+    </label>
+
+    <label>
+        Limit per page:
+        <input type="number" min="1" max="1000" @bind="_limit" />
+    </label>
+
+    <button type="button" @onclick="RunAsync" disabled="@_loading">Run</button>
+</div>
+
+@if (_error is not null)
+{
+    <p class="query-error">@_error</p>
+}
+
+@if (_entries.Count > 0)
+{
+    <table class="log-results">
+        <thead>
+            <tr><th>Timestamp</th><th>Labels</th><th>Line</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in _entries)
+            {
+                <tr>
+                    <td>@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")</td>
+                    <td>@string.Join(", ", entry.Labels.Select(kv => $"{kv.Key}={kv.Value}"))</td>
+                    <td>@entry.Line</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (_cursor is not null)
+    {
+        <button type="button" @onclick="LoadMoreAsync" disabled="@_loading">Load more</button>
+    }
+}
+else if (_hasSearched && !_loading)
+{
+    <p>No log lines matched.</p>
+}
+
+@code {
+    private readonly GroupEditor _root = new();
+    private readonly List<LogEntry> _entries = [];
+    private long? _cursor;
+    private bool _loading;
+    private bool _hasSearched;
+    private string? _error;
+    private int _selectedRangeMinutes = 60;
+    private int _limit = 200;
+
+    private Task RunAsync()
+    {
+        _entries.Clear();
+        _cursor = null;
+        _hasSearched = true;
+        return FetchPageAsync(cursor: null);
+    }
+
+    private Task LoadMoreAsync() => FetchPageAsync(_cursor);
+
+    private async Task FetchPageAsync(long? cursor)
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var to = DateTimeOffset.UtcNow;
+            var from = to.AddMinutes(-_selectedRangeMinutes);
+            var request = new LogQueryRequest(_root.ToQueryNode(), from, to, _limit, cursor);
+            var response = await Api.QueryAsync(request, CancellationToken.None);
+            _entries.AddRange(response.Entries);
+            _cursor = response.NextCursor;
+        }
+        catch (LogApiException ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
