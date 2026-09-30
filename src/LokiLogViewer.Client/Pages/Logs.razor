@@ -6,61 +6,92 @@
 
 <PageTitle>Logs</PageTitle>
 
-<h1>Logs</h1>
+<div class="logs-page">
+    <h1>Logs</h1>
 
-<QueryGroupEditor Group="_root" IsRoot="true" />
+    <QueryGroupEditor Group="_root" IsRoot="true" />
 
-<div class="query-toolbar">
-    <label>
-        Time range:
-        <select @bind="_selectedRangeMinutes">
-            <option value="15">Last 15 minutes</option>
-            <option value="60">Last 1 hour</option>
-            <option value="360">Last 6 hours</option>
-            <option value="1440">Last 24 hours</option>
-        </select>
-    </label>
+    <div class="query-toolbar">
+        <div class="field">
+            <label>Time range</label>
+            <select class="form-select form-select-sm" @bind="_selectedRangeMinutes">
+                <option value="15">Last 15 minutes</option>
+                <option value="60">Last 1 hour</option>
+                <option value="360">Last 6 hours</option>
+                <option value="1440">Last 24 hours</option>
+            </select>
+        </div>
 
-    <label>
-        Limit per page:
-        <input type="number" min="1" max="1000" @bind="_limit" />
-    </label>
+        <div class="field">
+            <label>Limit per page</label>
+            <input type="number" class="form-control form-control-sm" min="1" max="1000" style="width: 6rem" @bind="_limit" />
+        </div>
 
-    <button type="button" @onclick="RunAsync" disabled="@_loading">Run</button>
-</div>
+        <span class="spacer" style="flex:1"></span>
 
-@if (_error is not null)
-{
-    <p class="query-error">@_error</p>
-}
-
-@if (_entries.Count > 0)
-{
-    <table class="log-results">
-        <thead>
-            <tr><th>Timestamp</th><th>Labels</th><th>Line</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var entry in _entries)
+        <button type="button" class="btn btn-primary" @onclick="RunAsync" disabled="@_loading">
+            @if (_loading)
             {
-                <tr>
-                    <td>@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")</td>
-                    <td>@string.Join(", ", entry.Labels.Select(kv => $"{kv.Key}={kv.Value}"))</td>
-                    <td>@entry.Line</td>
-                </tr>
+                <span class="spinner-inline"></span>
             }
-        </tbody>
-    </table>
+            Run
+        </button>
+    </div>
 
-    @if (_cursor is not null)
+    @if (_error is not null)
     {
-        <button type="button" @onclick="LoadMoreAsync" disabled="@_loading">Load more</button>
+        <div class="alert alert-danger" role="alert">@_error</div>
     }
-}
-else if (_hasSearched && !_loading)
-{
-    <p>No log lines matched.</p>
-}
+
+    @if (_entries.Count > 0)
+    {
+        <div class="results-summary">
+            <strong>@_entries.Count</strong> log line@(_entries.Count == 1 ? "" : "s")
+        </div>
+
+        <table class="log-results table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Labels</th>
+                    <th>Line</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var entry in _entries)
+                {
+                    <tr>
+                        <td class="log-timestamp">@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")</td>
+                        <td>
+                            @foreach (var (key, value) in entry.Labels)
+                            {
+                                <span class="label-badge @(IsLevelKey(key) ? $"level-badge {LevelClass(value)}" : "")">@key=@value</span>
+                            }
+                        </td>
+                        <td class="log-line">@entry.Line</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (_cursor is not null)
+        {
+            <div class="load-more-row">
+                <button type="button" class="btn btn-outline-secondary" @onclick="LoadMoreAsync" disabled="@_loading">
+                    @if (_loading)
+                    {
+                        <span class="spinner-inline"></span>
+                    }
+                    Load more
+                </button>
+            </div>
+        }
+    }
+    else if (_hasSearched && !_loading && _error is null)
+    {
+        <p class="text-muted">No log lines matched.</p>
+    }
+</div>
 
 @code {
     private readonly GroupEditor _root = new();
@@ -104,4 +135,10 @@ else if (_hasSearched && !_loading)
             _loading = false;
         }
     }
+
+    private static bool IsLevelKey(string key) =>
+        key.Equals("level", StringComparison.OrdinalIgnoreCase) ||
+        key.Equals("detected_level", StringComparison.OrdinalIgnoreCase);
+
+    private static string LevelClass(string level) => $"level-{level.ToLowerInvariant()}";
 }

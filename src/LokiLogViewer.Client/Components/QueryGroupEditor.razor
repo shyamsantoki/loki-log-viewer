@@ -1,17 +1,30 @@
-<div class="query-group">
+<div class="query-group @(Group.Operator == GroupOperator.And ? "op-and" : "op-or")">
     <div class="query-group-header">
-        <label title="Negate this whole group">
-            <input type="checkbox" @bind="Group.Negate" /> NOT
-        </label>
+        <button type="button"
+                class="btn btn-sm toggle-btn @(Group.Negate ? "btn-danger" : "btn-outline-secondary")"
+                title="Negate this whole group"
+                @onclick="() => Group.Negate = !Group.Negate">
+            NOT
+        </button>
 
-        <select @bind="Group.Operator">
-            <option value="@GroupOperator.And">AND</option>
-            <option value="@GroupOperator.Or">OR</option>
-        </select>
+        <div class="btn-group btn-group-sm" role="group" aria-label="AND / OR">
+            <button type="button" class="btn @(Group.Operator == GroupOperator.And ? "btn-primary" : "btn-outline-primary")"
+                    @onclick="() => Group.Operator = GroupOperator.And">
+                AND
+            </button>
+            <button type="button" class="btn @(Group.Operator == GroupOperator.Or ? "btn-warning" : "btn-outline-warning")"
+                    @onclick="() => Group.Operator = GroupOperator.Or">
+                OR
+            </button>
+        </div>
+
+        <span class="spacer"></span>
 
         @if (!IsRoot)
         {
-            <button type="button" class="remove-btn" @onclick="OnRemove">Remove group</button>
+            <button type="button" class="btn btn-sm btn-outline-danger icon-btn" title="Remove group" @onclick="OnRemove">
+                &#x2715;
+            </button>
         }
     </div>
 
@@ -30,8 +43,8 @@
     </div>
 
     <div class="query-group-actions">
-        <button type="button" @onclick="AddCondition">+ Condition</button>
-        <button type="button" @onclick="AddGroup">+ Group</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddCondition">+ Condition</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddGroup">+ Group</button>
     </div>
 </div>
 

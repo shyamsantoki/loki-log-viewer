@@ -1,11 +1,14 @@
 @inject LogApiClient Api
 
 <div class="query-row">
-    <label class="negate-toggle" title="Negate this condition">
-        <input type="checkbox" @bind="Condition.Negate" /> NOT
-    </label>
+    <button type="button"
+            class="btn btn-sm toggle-btn @(Condition.Negate ? "btn-danger" : "btn-outline-secondary")"
+            title="Negate this condition"
+            @onclick="() => Condition.Negate = !Condition.Negate">
+        NOT
+    </button>
 
-    <input type="text" list="@_labelsListId" placeholder="label"
+    <input type="text" class="form-control form-control-sm field-label" list="@_labelsListId" placeholder="label"
            @bind="Condition.Label" @bind:event="onchange" @bind:after="OnLabelChangedAsync" />
     <datalist id="@_labelsListId">
         @foreach (var label in _labelOptions)
@@ -14,14 +17,15 @@
         }
     </datalist>
 
-    <select @bind="Condition.Operator">
+    <select class="form-select form-select-sm field-op" @bind="Condition.Operator">
         <option value="@LabelOperator.Equals">=</option>
         <option value="@LabelOperator.NotEquals">!=</option>
         <option value="@LabelOperator.Matches">=~ (regex)</option>
         <option value="@LabelOperator.NotMatches">!~ (regex)</option>
     </select>
 
-    <input type="text" list="@_valuesListId" placeholder="value" @bind="Condition.Value" @bind:event="oninput" />
+    <input type="text" class="form-control form-control-sm field-value" list="@_valuesListId" placeholder="value"
+           @bind="Condition.Value" @bind:event="oninput" />
     <datalist id="@_valuesListId">
         @foreach (var value in _valueOptions)
         {
@@ -29,7 +33,9 @@
         }
     </datalist>
 
-    <button type="button" class="remove-btn" title="Remove condition" @onclick="OnRemove">&#x2715;</button>
+    <button type="button" class="btn btn-sm btn-outline-danger icon-btn ms-auto" title="Remove condition" @onclick="OnRemove">
+        &#x2715;
+    </button>
 </div>
 
 @code {

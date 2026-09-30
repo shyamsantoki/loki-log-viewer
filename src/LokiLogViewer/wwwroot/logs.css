@@ -1,0 +1,209 @@
+/* Log viewer: query builder + results, layered on top of Bootstrap. */
+
+.logs-page {
+    max-width: 1100px;
+}
+
+.logs-page h1 {
+    margin-bottom: 1.25rem;
+}
+
+/* ---- Query builder ---- */
+
+.query-group {
+    border: 1px solid #d6d5d5;
+    border-left-width: 4px;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    background: #fff;
+}
+
+.query-group.op-and {
+    border-left-color: #1b6ec2;
+}
+
+.query-group.op-or {
+    border-left-color: #e0a800;
+}
+
+.query-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.query-group-header .spacer {
+    flex: 1;
+}
+
+.query-group-children {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.query-group-children:empty {
+    display: none;
+}
+
+.query-group-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.query-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: #f7f9fb;
+    border: 1px solid #e3e6ea;
+    border-radius: 0.4rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.query-row .field-label {
+    min-width: 10rem;
+}
+
+.query-row .field-value {
+    min-width: 12rem;
+    flex: 1;
+}
+
+.query-row .field-op {
+    width: auto;
+}
+
+.toggle-btn {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+}
+
+.icon-btn {
+    line-height: 1;
+    padding: 0.2rem 0.5rem;
+}
+
+/* ---- Toolbar ---- */
+
+.query-toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: #f7f9fb;
+    border: 1px solid #e3e6ea;
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+    margin: 1rem 0;
+    position: sticky;
+    top: 3.6rem;
+    z-index: 2;
+}
+
+.query-toolbar .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.query-toolbar label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* ---- Results ---- */
+
+.results-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.log-results {
+    width: 100%;
+    font-size: 0.875rem;
+}
+
+.log-results th {
+    white-space: nowrap;
+}
+
+.log-results td.log-timestamp {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: #495057;
+}
+
+.log-results td.log-line {
+    font-family: 'Cascadia Code', 'Consolas', 'SFMono-Regular', Menlo, monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.label-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 500;
+    background: #eef1f4;
+    color: #495057;
+    border-radius: 0.3rem;
+    padding: 0.1rem 0.4rem;
+    margin: 0 0.2rem 0.2rem 0;
+    white-space: nowrap;
+}
+
+.level-badge {
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.level-error, .level-critical, .level-fatal {
+    background: #f8d7da;
+    color: #842029;
+}
+
+.level-warn, .level-warning {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.level-info {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.level-debug, .level-trace {
+    background: #e2e3e5;
+    color: #41464b;
+}
+
+.load-more-row {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.spinner-inline {
+    width: 0.9rem;
+    height: 0.9rem;
+    border: 0.15rem solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spinner-rotate 0.75s linear infinite;
+    margin-right: 0.4rem;
+    vertical-align: -0.1rem;
+}
+
+@keyframes spinner-rotate {
+    to { transform: rotate(360deg); }
+}
