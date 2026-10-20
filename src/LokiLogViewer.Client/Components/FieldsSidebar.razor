@@ -1,0 +1,53 @@
+<aside class="fields-sidebar">
+    <h2 class="fields-sidebar-title">Columns</h2>
+    <p class="fields-sidebar-hint">Check a field to add it as a column in the results.</p>
+
+    @if (AvailableLabels.Count == 0 && AvailableFields.Count == 0)
+    {
+        <p class="fields-sidebar-empty">Run a search to discover labels and fields.</p>
+    }
+
+    @if (AvailableLabels.Count > 0)
+    {
+        <h3 class="fields-sidebar-group">Labels</h3>
+        <ul class="fields-sidebar-list">
+            @foreach (var label in AvailableLabels)
+            {
+                <li>
+                    <label>
+                        <input type="checkbox" checked="@SelectedLabels.Contains(label)"
+                               @onchange="() => OnToggleLabel.InvokeAsync(label)" />
+                        @label
+                    </label>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (AvailableFields.Count > 0)
+    {
+        <h3 class="fields-sidebar-group">Fields (from JSON log lines)</h3>
+        <ul class="fields-sidebar-list">
+            @foreach (var field in AvailableFields)
+            {
+                <li>
+                    <label>
+                        <input type="checkbox" checked="@SelectedFields.Contains(field)"
+                               @onchange="() => OnToggleField.InvokeAsync(field)" />
+                        @field
+                    </label>
+                </li>
+            }
+        </ul>
+    }
+</aside>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> AvailableLabels { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlySet<string> SelectedLabels { get; set; } = new HashSet<string>();
+    [Parameter] public EventCallback<string> OnToggleLabel { get; set; }
+
+    [Parameter, EditorRequired] public IReadOnlyList<string> AvailableFields { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlySet<string> SelectedFields { get; set; } = new HashSet<string>();
+    [Parameter] public EventCallback<string> OnToggleField { get; set; }
+}

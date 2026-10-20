@@ -2,96 +2,117 @@
 @* Prerendering runs on the server, which doesn't have LogApiClient registered (only the
    Client's WASM DI container does) - this page is interactive-only anyway, so skip it. *@
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
+@using LokiLogViewer.Client.Results
 @inject LogApiClient Api
 
 <PageTitle>LokiLogViewer</PageTitle>
 
-<div class="logs-page">
-    <h1>Search your logs</h1>
-    <p class="page-subtitle">Build a filter below, pick a time range, then click Search.</p>
+<div class="logs-layout">
+    <FieldsSidebar AvailableLabels="_availableLabelKeys" SelectedLabels="_selectedLabelKeys" OnToggleLabel="ToggleLabel"
+                    AvailableFields="_availableFieldPaths" SelectedFields="_selectedFieldPaths" OnToggleField="ToggleField" />
 
-    <QueryGroupEditor Group="_root" IsRoot="true" />
+    <div class="logs-main">
+        <h1>Search your logs</h1>
+        <p class="page-subtitle">Build a filter below, pick a time range, then click Search.</p>
 
-    <div class="query-toolbar">
-        <div class="field">
-            <label>Time range</label>
-            <select class="form-select form-select-sm" @bind="_selectedRangeMinutes">
-                <option value="15">Last 15 minutes</option>
-                <option value="60">Last 1 hour</option>
-                <option value="360">Last 6 hours</option>
-                <option value="1440">Last 24 hours</option>
-            </select>
-        </div>
+        <QueryGroupEditor Group="_root" IsRoot="true" />
 
-        <div class="field">
-            <label>Max results per page</label>
-            <input type="number" class="form-control form-control-sm" min="1" max="1000" style="width: 6rem" @bind="_limit" />
-        </div>
-
-        <span class="spacer" style="flex:1"></span>
-
-        <button type="button" class="btn btn-primary btn-lg" @onclick="RunAsync" disabled="@_loading">
-            @if (_loading)
-            {
-                <span class="spinner-inline"></span>
-            }
-            Search logs
-        </button>
-    </div>
-
-    @if (_error is not null)
-    {
-        <div class="alert alert-danger" role="alert">@_error</div>
-    }
-
-    @if (_entries.Count > 0)
-    {
-        <div class="results-summary">
-            Showing <strong>@_entries.Count</strong> log line@(_entries.Count == 1 ? "" : "s")
-        </div>
-
-        <table class="log-results table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Labels</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var entry in _entries)
-                {
-                    <tr>
-                        <td class="log-timestamp">@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")</td>
-                        <td>
-                            @foreach (var (key, value) in entry.Labels)
-                            {
-                                <span class="label-badge @(IsLevelKey(key) ? $"level-badge {LevelClass(value)}" : "")">@key=@value</span>
-                            }
-                        </td>
-                        <td class="log-line">@entry.Line</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-
-        @if (_cursor is not null)
-        {
-            <div class="load-more-row">
-                <button type="button" class="btn btn-outline-secondary" @onclick="LoadMoreAsync" disabled="@_loading">
-                    @if (_loading)
-                    {
-                        <span class="spinner-inline"></span>
-                    }
-                    Load more logs
-                </button>
+        <div class="query-toolbar">
+            <div class="field">
+                <label>Time range</label>
+                <select class="form-select form-select-sm" @bind="_selectedRangeMinutes">
+                    <option value="15">Last 15 minutes</option>
+                    <option value="60">Last 1 hour</option>
+                    <option value="360">Last 6 hours</option>
+                    <option value="1440">Last 24 hours</option>
+                </select>
             </div>
+
+            <div class="field">
+                <label>Max results per page</label>
+                <input type="number" class="form-control form-control-sm" min="1" max="1000" style="width: 6rem" @bind="_limit" />
+            </div>
+
+            <span class="spacer" style="flex:1"></span>
+
+            <button type="button" class="btn btn-primary btn-lg" @onclick="RunAsync" disabled="@_loading">
+                @if (_loading)
+                {
+                    <span class="spinner-inline"></span>
+                }
+                Search logs
+            </button>
+        </div>
+
+        @if (_error is not null)
+        {
+            <div class="alert alert-danger" role="alert">@_error</div>
         }
-    }
-    else if (_hasSearched && !_loading && _error is null)
-    {
-        <p class="text-muted">No log lines matched. Try widening the time range or removing a condition.</p>
-    }
+
+        @if (_entries.Count > 0)
+        {
+            <div class="results-summary">
+                Showing <strong>@_entries.Count</strong> log line@(_entries.Count == 1 ? "" : "s")
+            </div>
+
+            <table class="log-results table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        @foreach (var label in _selectedLabelKeys)
+                        {
+                            <th>@label</th>
+                        }
+                        @foreach (var field in _selectedFieldPaths)
+                        {
+                            <th>@field</th>
+                        }
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in _entries)
+                    {
+                        <tr>
+                            <td class="log-timestamp">@entry.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff")</td>
+                            @foreach (var label in _selectedLabelKeys)
+                            {
+                                <td class="log-field-cell">@(entry.Labels.GetValueOrDefault(label))</td>
+                            }
+                            @foreach (var field in _selectedFieldPaths)
+                            {
+                                <td class="log-field-cell">@GetFieldValue(entry, field)</td>
+                            }
+                            <td class="log-line">
+                                @if (GetLevel(entry) is { } level)
+                                {
+                                    <span class="label-badge level-badge @LevelClass(level)">@level</span>
+                                }
+                                @entry.Line
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (_cursor is not null)
+            {
+                <div class="load-more-row">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="LoadMoreAsync" disabled="@_loading">
+                        @if (_loading)
+                        {
+                            <span class="spinner-inline"></span>
+                        }
+                        Load more logs
+                    </button>
+                </div>
+            }
+        }
+        else if (_hasSearched && !_loading && _error is null)
+        {
+            <p class="text-muted">No log lines matched. Try widening the time range or removing a condition.</p>
+        }
+    </div>
 </div>
 
 @code {
@@ -103,6 +124,11 @@
     private string? _error;
     private int _selectedRangeMinutes = 60;
     private int _limit = 200;
+
+    private List<string> _availableLabelKeys = [];
+    private readonly HashSet<string> _selectedLabelKeys = [];
+    private List<string> _availableFieldPaths = [];
+    private readonly HashSet<string> _selectedFieldPaths = [];
 
     private Task RunAsync()
     {
@@ -139,6 +165,7 @@
             var response = await Api.QueryAsync(request, CancellationToken.None);
             _entries.AddRange(response.Entries);
             _cursor = response.NextCursor;
+            RecomputeAvailableColumns();
         }
         catch (LogApiException ex)
         {
@@ -150,9 +177,53 @@
         }
     }
 
-    private static bool IsLevelKey(string key) =>
-        key.Equals("level", StringComparison.OrdinalIgnoreCase) ||
-        key.Equals("detected_level", StringComparison.OrdinalIgnoreCase);
+    // Labels/fields are discovered from whatever's already loaded, not a dedicated sample
+    // query - simplest option, at the cost of the list only growing as more pages load.
+    private void RecomputeAvailableColumns()
+    {
+        var labelKeys = new SortedSet<string>(StringComparer.Ordinal);
+        var fieldPaths = new SortedSet<string>(StringComparer.Ordinal);
+
+        foreach (var entry in _entries)
+        {
+            foreach (var key in entry.Labels.Keys)
+            {
+                labelKeys.Add(key);
+            }
+
+            foreach (var key in LogLineJson.Flatten(entry.Line).Keys)
+            {
+                fieldPaths.Add(key);
+            }
+        }
+
+        _availableLabelKeys = labelKeys.ToList();
+        _availableFieldPaths = fieldPaths.ToList();
+        _selectedLabelKeys.IntersectWith(labelKeys);
+        _selectedFieldPaths.IntersectWith(fieldPaths);
+    }
+
+    private void ToggleLabel(string key)
+    {
+        if (!_selectedLabelKeys.Remove(key))
+        {
+            _selectedLabelKeys.Add(key);
+        }
+    }
+
+    private void ToggleField(string path)
+    {
+        if (!_selectedFieldPaths.Remove(path))
+        {
+            _selectedFieldPaths.Add(path);
+        }
+    }
+
+    private static string? GetFieldValue(LogEntry entry, string path) =>
+        LogLineJson.Flatten(entry.Line).GetValueOrDefault(path);
+
+    private static string? GetLevel(LogEntry entry) =>
+        entry.Labels.GetValueOrDefault("level") ?? entry.Labels.GetValueOrDefault("detected_level");
 
     private static string LevelClass(string level) => $"level-{level.ToLowerInvariant()}";
 }

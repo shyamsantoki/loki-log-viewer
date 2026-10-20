@@ -1,16 +1,77 @@
 /* Log viewer: query builder + results, layered on top of Bootstrap. */
 
-.logs-page {
+.logs-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.logs-main {
+    flex: 1;
+    min-width: 0;
     max-width: 1100px;
 }
 
-.logs-page h1 {
+.logs-main h1 {
     margin-bottom: 0.25rem;
 }
 
 .page-subtitle {
     color: #6c757d;
     margin-bottom: 1.25rem;
+}
+
+/* ---- Fields sidebar ---- */
+
+.fields-sidebar {
+    flex: 0 0 15rem;
+    position: sticky;
+    top: calc(3.5rem + 1.5rem);
+    max-height: calc(100vh - 3.5rem - 3rem);
+    overflow-y: auto;
+    background: #f7f9fb;
+    border: 1px solid #e3e6ea;
+    border-radius: 0.5rem;
+    padding: 0.85rem 1rem;
+}
+
+.fields-sidebar-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.fields-sidebar-hint, .fields-sidebar-empty {
+    font-size: 0.78rem;
+    color: #6c757d;
+    margin-bottom: 0.75rem;
+}
+
+.fields-sidebar-group {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin: 0.75rem 0 0.35rem;
+}
+
+.fields-sidebar-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.82rem;
+}
+
+.fields-sidebar-list li {
+    margin-bottom: 0.3rem;
+    word-break: break-word;
+}
+
+.fields-sidebar-list label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+    cursor: pointer;
 }
 
 /* ---- Query builder ---- */
@@ -176,6 +237,11 @@
     word-break: break-word;
 }
 
+.log-results td.log-field-cell {
+    white-space: nowrap;
+    color: #495057;
+}
+
 .label-badge {
     display: inline-block;
     font-size: 0.7rem;
@@ -233,4 +299,17 @@
 
 @keyframes spinner-rotate {
     to { transform: rotate(360deg); }
+}
+
+@media (max-width: 900px) {
+    .logs-layout {
+        flex-direction: column;
+    }
+
+    .fields-sidebar {
+        flex: none;
+        width: 100%;
+        position: static;
+        max-height: none;
+    }
 }
