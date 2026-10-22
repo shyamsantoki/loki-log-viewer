@@ -13,6 +13,11 @@ public static class LogsEndpoints
         group.MapGet("/search-fields", (IReadOnlyList<SearchFieldDefinition> fields) => Results.Ok(fields));
 
         // POST (not GET) because the label-discovery context is a small selector, not just an id.
+        // Used for the "additional filters" label-name autocomplete - the 4 configured fields
+        // already know their own label, so they never need this one.
+        group.MapPost("/labels", async (LabelsRequest request, LogSearchService service, CancellationToken ct)
+            => Results.Ok(await service.GetLabelsAsync(request, ct)));
+
         group.MapPost("/labels/{name}/values", async (string name, LabelsRequest request, LogSearchService service, CancellationToken ct)
             => Results.Ok(await service.GetLabelValuesAsync(name, request, ct)));
 

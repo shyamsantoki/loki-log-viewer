@@ -54,8 +54,9 @@ src/
     wwwroot/                      Server-side static assets (app.css, logs.css)
   LokiLogViewer.Client/            Blazor WebAssembly client
     Pages/Logs.razor              The log viewer page (routed at "/")
-    Components/                   SearchFieldRow (one fixed filter field) and FieldsSidebar
-                                   (the labels/JSON-fields column picker)
+    Components/                   SearchFieldRow (one configured filter field), AdHocFilterRow
+                                   (one user-added filter), FieldsSidebar (the labels/JSON-fields
+                                   column picker)
     Results/LogLineJson.cs        Tolerant JSON parsing of a log line's body, for the column picker
     Services/                     LogApiClient (typed HttpClient wrapper) + its exception type
   LokiLogViewer.Shared/            Shared between Server and Client
@@ -134,15 +135,26 @@ on load from `GET /api/logs/search-fields`) - no client code change needed. The 
 four match the label combination every manually-built query in this project's own HAR
 captures used to find "their app's logs".
 
+These 4 are a starting point, not a ceiling - see **Additional filters** below for
+adding more from the page itself without touching config.
+
 ## Using the page
 
 1. **Filters.** One input per configured field. Each is a plain text box with an
    autocomplete dropdown of real values for that label (fetched from Loki, scoped to
    whatever other fields already have a value - e.g. picking a namespace narrows the
    containers suggested next). Leave a field blank to not filter on it; whatever's
-   filled in is combined with a plain AND.
-2. **Time range and result limit**, then **Search logs**.
-3. **Results**, as a Time + Message table by default. The left sidebar lists every
+   filled in - from the configured fields, additional filters, or both - is combined
+   with a plain AND. At least one filter needs a value to search; it doesn't matter
+   which source it came from.
+2. **Additional filters.** Click **+ Add filter** to add a row where both the field
+   name and the value are free text with autocomplete (the field-name dropdown lists
+   every label Loki knows about, scoped the same way). Use this for anything not worth
+   permanently adding to `SearchFields` - a one-off filter, or a label nobody thought to
+   configure. If an additional filter names the same label as a configured field, the
+   additional filter's value wins.
+3. **Time range and result limit**, then **Search logs**.
+4. **Results**, as a Time + Message table by default. The left sidebar lists every
    label and every JSON key discovered in the loaded log lines (parsing each line's body
    as JSON when it is JSON) as checkboxes - check one to add it as a column. A level
    badge (from a `level` or `detected_level` label) shows inline before the message when
@@ -150,13 +162,14 @@ captures used to find "their app's logs".
 
 ## API reference
 
-Three endpoints under `/api/logs`:
+Four endpoints under `/api/logs`:
 
 | Endpoint | Body | Returns |
 |---|---|---|
 | `GET /api/logs/search-fields` | - | `SearchFieldDefinition[]` - the configured filter fields |
-| `POST /api/logs/labels/{name}/values` | `LabelsRequest` (`context`: other fields' current values, `from`, `to`) | `string[]` of values for that label |
-| `POST /api/logs/query` | `LogQueryRequest` (`conditions`: the filled-in fields, `from`, `to`, `limit`, optional `cursor`) | `LogQueryResponse` (`entries`, `nextCursor`) |
+| `POST /api/logs/labels` | `LabelsRequest` (`context`: other filters' current values, `from`, `to`) | `string[]` of label names - backs the additional-filter field-name autocomplete |
+| `POST /api/logs/labels/{name}/values` | `LabelsRequest` | `string[]` of values for that label |
+| `POST /api/logs/query` | `LogQueryRequest` (`conditions`: every filled-in field from either source, `from`, `to`, `limit`, optional `cursor`) | `LogQueryResponse` (`entries`, `nextCursor`) |
 
 The labels/query endpoints are POST rather than GET because the body carries a small
 selector context, not just an id. Errors: an empty or invalid filter returns `400` with

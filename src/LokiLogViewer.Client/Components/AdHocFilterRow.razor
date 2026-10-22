@@ -1,0 +1,86 @@
+@inject LogApiClient Api
+
+<div class="search-field-row adhoc-filter-row">
+    <input type="text" class="form-control form-control-sm" list="@_labelsListId"
+           value="@Label" @oninput="OnLabelInput" @onfocus="RefreshLabelsAsync" placeholder="field name" />
+    <datalist id="@_labelsListId">
+        @foreach (var label in _labelOptions)
+        {
+            <option value="@label"></option>
+        }
+    </datalist>
+
+    <input type="text" class="form-control form-control-sm" list="@_valuesListId"
+           value="@Value" @oninput="OnValueInput" @onfocus="RefreshValuesAsync" placeholder="value" />
+    <datalist id="@_valuesListId">
+        @foreach (var value in _valueOptions)
+        {
+            <option value="@value"></option>
+        }
+    </datalist>
+
+    <button type="button" class="btn btn-sm btn-outline-danger icon-btn" title="Remove filter" @onclick="OnRemove">
+        &#x2715;
+    </button>
+</div>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public EventCallback<string> OnLabelChanged { get; set; }
+
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> OnValueChanged { get; set; }
+
+    [Parameter] public EventCallback OnRemove { get; set; }
+
+    // Every other filter (fixed fields + other ad-hoc rows) that currently has a value, used to
+    // scope both the label-name and the value suggestions.
+    [Parameter] public IReadOnlyDictionary<string, string> OtherValues { get; set; } = new Dictionary<string, string>();
+
+    private readonly string _labelsListId = $"adhoc-labels-{Guid.NewGuid():N}";
+    private readonly string _valuesListId = $"adhoc-values-{Guid.NewGuid():N}";
+    private IReadOnlyList<string> _labelOptions = [];
+    private IReadOnlyList<string> _valueOptions = [];
+
+    private Task OnLabelInput(ChangeEventArgs e) => OnLabelChanged.InvokeAsync(e.Value?.ToString() ?? "");
+    private Task OnValueInput(ChangeEventArgs e) => OnValueChanged.InvokeAsync(e.Value?.ToString() ?? "");
+
+    private async Task RefreshLabelsAsync()
+    {
+        var to = DateTimeOffset.UtcNow;
+        var request = new LabelsRequest(BuildContext(), to.AddHours(-24), to);
+        try
+        {
+            _labelOptions = await Api.GetLabelsAsync(request, CancellationToken.None);
+        }
+        catch (LogApiException)
+        {
+            _labelOptions = [];
+        }
+    }
+
+    private async Task RefreshValuesAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Label))
+        {
+            _valueOptions = [];
+            return;
+        }
+
+        var to = DateTimeOffset.UtcNow;
+        var request = new LabelsRequest(BuildContext(), to.AddHours(-24), to);
+        try
+        {
+            _valueOptions = await Api.GetLabelValuesAsync(Label, request, CancellationToken.None);
+        }
+        catch (LogApiException)
+        {
+            _valueOptions = [];
+        }
+    }
+
+    private List<LogCondition> BuildContext() => OtherValues
+        .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+        .Select(kv => new LogCondition(kv.Key, kv.Value))
+        .ToList();
+}

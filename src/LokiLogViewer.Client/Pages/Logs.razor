@@ -24,6 +24,21 @@
             }
         </div>
 
+        <div class="additional-filters">
+            @if (_adHocFilters.Count > 0)
+            {
+                <label class="additional-filters-label">Additional filters</label>
+                @foreach (var filter in _adHocFilters)
+                {
+                    <AdHocFilterRow Label="@filter.Label" OnLabelChanged="value => filter.Label = value"
+                                     Value="@filter.Value" OnValueChanged="value => filter.Value = value"
+                                     OnRemove="() => _adHocFilters.Remove(filter)"
+                                     OtherValues="GetOtherValues(filter.Label)" />
+                }
+            }
+            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddAdHocFilter">+ Add filter</button>
+        </div>
+
         <div class="query-toolbar">
             <div class="field">
                 <label>Time range</label>
@@ -123,8 +138,15 @@
 </div>
 
 @code {
+    private sealed class AdHocFilter
+    {
+        public string Label { get; set; } = "";
+        public string Value { get; set; } = "";
+    }
+
     private IReadOnlyList<SearchFieldDefinition> _searchFields = [];
     private readonly Dictionary<string, string> _fieldValues = [];
+    private readonly List<AdHocFilter> _adHocFilters = [];
 
     private readonly List<LogEntry> _entries = [];
     private long? _cursor;
@@ -153,8 +175,31 @@
 
     private void SetFieldValue(string label, string value) => _fieldValues[label] = value;
 
-    private IReadOnlyDictionary<string, string> GetOtherValues(string excludingLabel) =>
-        _fieldValues.Where(kv => kv.Key != excludingLabel).ToDictionary(kv => kv.Key, kv => kv.Value);
+    private void AddAdHocFilter() => _adHocFilters.Add(new AdHocFilter());
+
+    // Every other filter (fixed fields + ad-hoc rows) that currently has a label and a value,
+    // excluding whichever one is asking (so a field never scopes its own suggestions by itself).
+    private IReadOnlyDictionary<string, string> GetOtherValues(string excludingLabel)
+    {
+        var result = new Dictionary<string, string>();
+        foreach (var (label, value) in _fieldValues)
+        {
+            if (label != excludingLabel && !string.IsNullOrWhiteSpace(value))
+            {
+                result[label] = value;
+            }
+        }
+
+        foreach (var filter in _adHocFilters)
+        {
+            if (!string.IsNullOrWhiteSpace(filter.Label) && filter.Label != excludingLabel && !string.IsNullOrWhiteSpace(filter.Value))
+            {
+                result[filter.Label] = filter.Value;
+            }
+        }
+
+        return result;
+    }
 
     private Task RunAsync()
     {
@@ -171,10 +216,32 @@
         return FetchPageAsync(conditions, cursor: null);
     }
 
-    private List<LogCondition> BuildConditions() => _fieldValues
-        .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
-        .Select(kv => new LogCondition(kv.Key, kv.Value))
-        .ToList();
+    // The 4 configured fields and any ad-hoc rows are just two sources of the same thing - a
+    // label/value pair - so they're merged into one list here. A later source overriding an
+    // earlier one with the same label (last-write-wins) avoids ever sending Loki a selector that
+    // contradicts itself, e.g. {namespace="a", namespace="b"}, if someone adds an ad-hoc filter
+    // for a label a fixed field already covers.
+    private List<LogCondition> BuildConditions()
+    {
+        var merged = new Dictionary<string, string>();
+        foreach (var (label, value) in _fieldValues)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                merged[label] = value;
+            }
+        }
+
+        foreach (var filter in _adHocFilters)
+        {
+            if (!string.IsNullOrWhiteSpace(filter.Label) && !string.IsNullOrWhiteSpace(filter.Value))
+            {
+                merged[filter.Label] = filter.Value;
+            }
+        }
+
+        return merged.Select(kv => new LogCondition(kv.Key, kv.Value)).ToList();
+    }
 
     private Task LoadMoreAsync() => FetchPageAsync(BuildConditions(), _cursor);
 
