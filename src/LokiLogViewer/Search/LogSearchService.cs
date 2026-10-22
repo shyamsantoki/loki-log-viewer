@@ -1,36 +1,25 @@
 using LokiLogViewer.Loki;
-using LokiLogViewer.Shared.Search;
 using LokiLogViewer.Shared.Querying;
-using Microsoft.Extensions.Options;
+using LokiLogViewer.Shared.Search;
 
 namespace LokiLogViewer.Search;
 
-internal sealed class LogSearchService(LokiClient lokiClient, IOptions<LokiOptions> options)
+internal sealed class LogSearchService(LokiClient lokiClient)
 {
     public async Task<LogQueryResponse> QueryAsync(LogQueryRequest request, CancellationToken ct)
     {
-        var selectors = LogQlBuilder.BuildSelectors(request.Filter, options.Value.MaxBranches);
-        if (selectors.Count == 0)
-        {
-            return new LogQueryResponse([], null);
-        }
+        var selector = LogQlBuilder.BuildSelector(request.Conditions);
 
         var startNano = UnixTime.ToUnixNanoseconds(request.From);
         var endNano = request.Cursor ?? UnixTime.ToUnixNanoseconds(request.To);
 
-        var branchResults = await Task.WhenAll(selectors.Select(selector =>
-            lokiClient.QueryRangeAsync(selector, startNano, endNano, request.Limit, "backward", ct)));
+        var streams = await lokiClient.QueryRangeAsync(selector, startNano, endNano, request.Limit, "backward", ct);
 
-        // The same log line can be returned by more than one OR-branch when their selectors
-        // overlap, so de-duplicate on (timestamp, labels, line) before merging.
-        var seen = new HashSet<(long Ts, string LabelsKey, string Line)>();
+        // One selector can still match several streams (distinct label combinations), so their
+        // values need merging and re-sorting into one timeline before paging.
         var merged = new List<LogEntry>();
-
-        foreach (var stream in branchResults.SelectMany(streams => streams))
+        foreach (var stream in streams)
         {
-            var labelsKey = string.Join(",", stream.Labels.OrderBy(kv => kv.Key, StringComparer.Ordinal)
-                .Select(kv => $"{kv.Key}={kv.Value}"));
-
             foreach (var entry in stream.Values)
             {
                 if (entry.Length < 2 || !long.TryParse(entry[0], out var timestampNano))
@@ -38,11 +27,7 @@ internal sealed class LogSearchService(LokiClient lokiClient, IOptions<LokiOptio
                     continue;
                 }
 
-                var line = entry[1];
-                if (seen.Add((timestampNano, labelsKey, line)))
-                {
-                    merged.Add(new LogEntry(timestampNano, line, stream.Labels));
-                }
+                merged.Add(new LogEntry(timestampNano, entry[1], stream.Labels));
             }
         }
 
@@ -63,13 +48,6 @@ internal sealed class LogSearchService(LokiClient lokiClient, IOptions<LokiOptio
     public Task<IReadOnlyList<string>> GetLabelValuesAsync(string labelName, LabelsRequest request, CancellationToken ct) =>
         lokiClient.GetLabelValuesAsync(labelName, BuildContextSelector(request.Context), request.From, request.To, ct);
 
-    private static string? BuildContextSelector(IReadOnlyList<ConditionNode> context)
-    {
-        if (context.Count == 0)
-        {
-            return null;
-        }
-
-        return LogQlBuilder.BuildSelectors(new GroupNode(GroupOperator.And, context)).Single();
-    }
+    private static string? BuildContextSelector(IReadOnlyList<LogCondition> context) =>
+        context.Count == 0 ? null : LogQlBuilder.BuildSelector(context);
 }

@@ -1,13 +1,15 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using LokiLogViewer.Shared.Search;
-using LokiLogViewer.Shared.Serialization;
 
 namespace LokiLogViewer.Client.Services;
 
 public sealed class LogApiClient(HttpClient http)
 {
-    private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    public Task<IReadOnlyList<SearchFieldDefinition>> GetSearchFieldsAsync(CancellationToken ct) =>
+        GetAsync<IReadOnlyList<SearchFieldDefinition>>("api/logs/search-fields", ct);
 
     public Task<IReadOnlyList<string>> GetLabelsAsync(LabelsRequest request, CancellationToken ct) =>
         PostAsync<LabelsRequest, IReadOnlyList<string>>("api/logs/labels", request, ct);
@@ -18,9 +20,20 @@ public sealed class LogApiClient(HttpClient http)
     public Task<LogQueryResponse> QueryAsync(LogQueryRequest request, CancellationToken ct) =>
         PostAsync<LogQueryRequest, LogQueryResponse>("api/logs/query", request, ct);
 
+    private async Task<TResponse> GetAsync<TResponse>(string url, CancellationToken ct)
+    {
+        var response = await http.GetAsync(url, ct);
+        return await ReadResponseAsync<TResponse>(response, ct);
+    }
+
     private async Task<TResponse> PostAsync<TRequest, TResponse>(string url, TRequest request, CancellationToken ct)
     {
         var response = await http.PostAsJsonAsync(url, request, JsonOptions, ct);
+        return await ReadResponseAsync<TResponse>(response, ct);
+    }
+
+    private async Task<TResponse> ReadResponseAsync<TResponse>(HttpResponseMessage response, CancellationToken ct)
+    {
         if (!response.IsSuccessStatusCode)
         {
             var message = await ReadErrorMessageAsync(response, ct);
@@ -52,12 +65,5 @@ public sealed class LogApiClient(HttpClient http)
         }
 
         return string.IsNullOrWhiteSpace(body) ? response.ReasonPhrase ?? "Request failed." : body;
-    }
-
-    private static JsonSerializerOptions CreateJsonOptions()
-    {
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        JsonDefaults.Apply(options);
-        return options;
     }
 }

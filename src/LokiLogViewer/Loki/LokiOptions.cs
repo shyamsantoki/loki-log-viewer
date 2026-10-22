@@ -22,8 +22,5 @@ public sealed class LokiOptions
     public string? BasicAuthUsername { get; set; }
     public string? BasicAuthPassword { get; set; }
 
-    /// <summary>Caps how many LogQL selectors one query tree may expand into.</summary>
-    public int MaxBranches { get; set; } = 25;
-
     public int DefaultLimit { get; set; } = 200;
 }

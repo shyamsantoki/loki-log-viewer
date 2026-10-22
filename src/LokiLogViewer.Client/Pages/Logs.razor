@@ -13,9 +13,16 @@
 
     <div class="logs-main">
         <h1>Search your logs</h1>
-        <p class="page-subtitle">Build a filter below, pick a time range, then click Search.</p>
+        <p class="page-subtitle">Fill in what you know, pick a time range, then click Search.</p>
 
-        <QueryGroupEditor Group="_root" IsRoot="true" />
+        <div class="search-fields">
+            @foreach (var field in _searchFields)
+            {
+                <SearchFieldRow Definition="field" Value="@_fieldValues.GetValueOrDefault(field.Label, "")"
+                                 OnValueChanged="value => SetFieldValue(field.Label, value)"
+                                 OtherValues="GetOtherValues(field.Label)" />
+            }
+        </div>
 
         <div class="query-toolbar">
             <div class="field">
@@ -110,13 +117,15 @@
         }
         else if (_hasSearched && !_loading && _error is null)
         {
-            <p class="text-muted">No log lines matched. Try widening the time range or removing a condition.</p>
+            <p class="text-muted">No log lines matched. Try widening the time range or clearing a filter.</p>
         }
     </div>
 </div>
 
 @code {
-    private readonly GroupEditor _root = new();
+    private IReadOnlyList<SearchFieldDefinition> _searchFields = [];
+    private readonly Dictionary<string, string> _fieldValues = [];
+
     private readonly List<LogEntry> _entries = [];
     private long? _cursor;
     private bool _loading;
@@ -130,30 +139,46 @@
     private List<string> _availableFieldPaths = [];
     private readonly HashSet<string> _selectedFieldPaths = [];
 
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _searchFields = await Api.GetSearchFieldsAsync(CancellationToken.None);
+        }
+        catch (LogApiException ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private void SetFieldValue(string label, string value) => _fieldValues[label] = value;
+
+    private IReadOnlyDictionary<string, string> GetOtherValues(string excludingLabel) =>
+        _fieldValues.Where(kv => kv.Key != excludingLabel).ToDictionary(kv => kv.Key, kv => kv.Value);
+
     private Task RunAsync()
     {
-        if (!HasAnyCondition(_root))
+        var conditions = BuildConditions();
+        if (conditions.Count == 0)
         {
-            _error = "Add at least one condition above, then search again.";
+            _error = "Fill in at least one filter above, then search again.";
             return Task.CompletedTask;
         }
 
         _entries.Clear();
         _cursor = null;
         _hasSearched = true;
-        return FetchPageAsync(cursor: null);
+        return FetchPageAsync(conditions, cursor: null);
     }
 
-    private static bool HasAnyCondition(QueryNodeEditor node) => node switch
-    {
-        ConditionEditor condition => condition.IsComplete,
-        GroupEditor group => group.Children.Any(HasAnyCondition),
-        _ => false
-    };
+    private List<LogCondition> BuildConditions() => _fieldValues
+        .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+        .Select(kv => new LogCondition(kv.Key, kv.Value))
+        .ToList();
 
-    private Task LoadMoreAsync() => FetchPageAsync(_cursor);
+    private Task LoadMoreAsync() => FetchPageAsync(BuildConditions(), _cursor);
 
-    private async Task FetchPageAsync(long? cursor)
+    private async Task FetchPageAsync(List<LogCondition> conditions, long? cursor)
     {
         _loading = true;
         _error = null;
@@ -161,7 +186,7 @@
         {
             var to = DateTimeOffset.UtcNow;
             var from = to.AddMinutes(-_selectedRangeMinutes);
-            var request = new LogQueryRequest(_root.ToQueryNode(), from, to, _limit, cursor);
+            var request = new LogQueryRequest(conditions, from, to, _limit, cursor);
             var response = await Api.QueryAsync(request, CancellationToken.None);
             _entries.AddRange(response.Entries);
             _cursor = response.NextCursor;

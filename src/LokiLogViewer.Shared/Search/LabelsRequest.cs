@@ -1,11 +1,8 @@
-using LokiLogViewer.Shared.Querying;
-
 namespace LokiLogViewer.Shared.Search;
 
-// Used to scope the /labels and /labels/{name}/values pickers to whatever conditions are already
-// set in the AND-group the user is currently editing. Deliberately flat (no nested OR) - it's a
-// single selector, not a full filter tree.
+// Used to scope the /labels/{name}/values picker to whatever other fixed fields already have a
+// value, so e.g. picking a namespace narrows down the containers offered for the next field.
 public sealed record LabelsRequest(
-    IReadOnlyList<ConditionNode> Context,
+    IReadOnlyList<LogCondition> Context,
     DateTimeOffset From,
     DateTimeOffset To);

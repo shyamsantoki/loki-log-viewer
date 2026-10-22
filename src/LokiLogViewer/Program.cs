@@ -5,6 +5,7 @@ using LokiLogViewer.Components;
 using LokiLogViewer.Endpoints;
 using LokiLogViewer.Loki;
 using LokiLogViewer.Search;
+using LokiLogViewer.Shared.Search;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,7 +40,9 @@ builder.Services.AddHttpClient<LokiClient>((sp, client) =>
 });
 
 builder.Services.AddScoped<LogSearchService>();
-builder.Services.ConfigureHttpJsonOptions(options => LokiLogViewer.Shared.Serialization.JsonDefaults.Apply(options.SerializerOptions));
+
+var searchFields = builder.Configuration.GetSection("SearchFields").Get<List<SearchFieldDefinition>>() ?? [];
+builder.Services.AddSingleton<IReadOnlyList<SearchFieldDefinition>>(searchFields);
 
 var app = builder.Build();
 

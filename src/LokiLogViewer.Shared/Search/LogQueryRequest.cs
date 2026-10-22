@@ -1,9 +1,7 @@
-using LokiLogViewer.Shared.Querying;
-
 namespace LokiLogViewer.Shared.Search;
 
 public sealed record LogQueryRequest(
-    QueryNode Filter,
+    IReadOnlyList<LogCondition> Conditions,
     DateTimeOffset From,
     DateTimeOffset To,
     int Limit,

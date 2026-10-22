@@ -1,6 +1,5 @@
 using LokiLogViewer.Search;
 using LokiLogViewer.Shared.Search;
-using LokiLogViewer.Shared.Querying;
 
 namespace LokiLogViewer.Endpoints;
 
@@ -11,10 +10,9 @@ public static class LogsEndpoints
         var group = app.MapGroup("/api/logs");
         group.AddEndpointFilter(HandleLokiFailuresAsync);
 
-        // POST (not GET) because the label-discovery context is a small selector, not just an id.
-        group.MapPost("/labels", async (LabelsRequest request, LogSearchService service, CancellationToken ct)
-            => Results.Ok(await service.GetLabelsAsync(request, ct)));
+        group.MapGet("/search-fields", (IReadOnlyList<SearchFieldDefinition> fields) => Results.Ok(fields));
 
+        // POST (not GET) because the label-discovery context is a small selector, not just an id.
         group.MapPost("/labels/{name}/values", async (string name, LabelsRequest request, LogSearchService service, CancellationToken ct)
             => Results.Ok(await service.GetLabelValuesAsync(name, request, ct)));
 
@@ -29,7 +27,7 @@ public static class LogsEndpoints
         {
             return await next(context);
         }
-        catch (Exception ex) when (ex is QueryTooComplexException or ArgumentException)
+        catch (ArgumentException ex)
         {
             return Results.BadRequest(new { error = ex.Message });
         }
