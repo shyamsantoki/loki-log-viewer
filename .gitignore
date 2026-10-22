@@ -8,6 +8,7 @@
 
 # local network capture, not part of the project
 *.har
+*.har.json
 
 # User-specific files
 *.rsuser
