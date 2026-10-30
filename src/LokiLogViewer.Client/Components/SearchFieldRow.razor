@@ -1,7 +1,7 @@
 @inject LogApiClient Api
 
-<div class="search-field-row">
-    <label class="search-field-label" for="@_inputId">@Definition.DisplayName</label>
+<div class="toolbar-group">
+    <label class="toolbar-label" for="@_inputId">@Definition.DisplayName</label>
 
     @if (Definition.Values is { Count: > 0 } fixedValues)
     {

@@ -1,6 +1,6 @@
 @inject LogApiClient Api
 
-<div class="search-field-row adhoc-filter-row">
+<div class="adhoc-filter-row">
     <input type="text" class="form-control form-control-sm" list="@_labelsListId"
            value="@Label" @oninput="OnLabelInput" @onfocus="RefreshLabelsAsync" placeholder="field name" />
     <datalist id="@_labelsListId">

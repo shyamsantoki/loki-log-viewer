@@ -12,57 +12,49 @@
                     AvailableFields="_availableFieldPaths" SelectedFields="_selectedFieldPaths" OnToggleField="ToggleField" />
 
     <div class="logs-main">
-        <h1>Search your logs</h1>
-        <p class="page-subtitle">Fill in what you know, pick a time range, then click Search.</p>
-
-        <div class="search-fields">
+        <div class="toolbar">
             @foreach (var field in _searchFields)
             {
                 <SearchFieldRow Definition="field" Value="@_fieldValues.GetValueOrDefault(field.Label, "")"
                                  OnValueChanged="value => SetFieldValue(field.Label, value)"
                                  OtherValues="GetOtherValues(field.Label)" />
             }
-        </div>
 
-        <div class="additional-filters">
-            @if (_adHocFilters.Count > 0)
-            {
-                <label class="additional-filters-label">Additional filters</label>
-                @foreach (var filter in _adHocFilters)
-                {
-                    <AdHocFilterRow Label="@filter.Label" OnLabelChanged="value => filter.Label = value"
-                                     Value="@filter.Value" OnValueChanged="value => filter.Value = value"
-                                     OnRemove="() => _adHocFilters.Remove(filter)"
-                                     OtherValues="GetOtherValues(filter.Label)" />
-                }
-            }
-            <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="AddAdHocFilter">+ Add filter</button>
-        </div>
+            <div class="toolbar-group additional-filters-group">
+                <label class="toolbar-label">Additional filters</label>
+                <div class="additional-filters-inline">
+                    @foreach (var filter in _adHocFilters)
+                    {
+                        <AdHocFilterRow Label="@filter.Label" OnLabelChanged="value => filter.Label = value"
+                                         Value="@filter.Value" OnValueChanged="value => filter.Value = value"
+                                         OnRemove="() => _adHocFilters.Remove(filter)"
+                                         OtherValues="GetOtherValues(filter.Label)" />
+                    }
+                    <button type="button" class="btn btn-sm btn-outline-secondary add-filter-btn" title="Add filter" @onclick="AddAdHocFilter">+</button>
+                </div>
+            </div>
 
-        <div class="query-toolbar">
-            <div class="field">
-                <label>Time range</label>
-                <select class="form-select form-select-sm" @bind="_selectedRangeMinutes">
-                    <option value="15">Last 15 minutes</option>
-                    <option value="60">Last 1 hour</option>
-                    <option value="360">Last 6 hours</option>
-                    <option value="1440">Last 24 hours</option>
+            <div class="toolbar-group">
+                <label class="toolbar-label" for="_sinceSelect">Since</label>
+                <select id="_sinceSelect" class="form-select form-select-sm" @bind="_selectedRangeMinutes">
+                    <option value="15">15m</option>
+                    <option value="60">1h</option>
+                    <option value="360">6h</option>
+                    <option value="1440">24h</option>
                 </select>
             </div>
 
-            <div class="field">
-                <label>Max results per page</label>
-                <input type="number" class="form-control form-control-sm" min="1" max="1000" style="width: 6rem" @bind="_limit" />
+            <div class="toolbar-group">
+                <label class="toolbar-label" for="_limitInput">Limit</label>
+                <input id="_limitInput" type="number" class="form-control form-control-sm" min="1" max="1000" @bind="_limit" />
             </div>
 
-            <span class="spacer" style="flex:1"></span>
-
-            <button type="button" class="btn btn-primary btn-lg" @onclick="RunAsync" disabled="@_loading">
+            <button type="button" class="btn btn-primary btn-sm search-btn" @onclick="RunAsync" disabled="@_loading">
                 @if (_loading)
                 {
                     <span class="spinner-inline"></span>
                 }
-                Search logs
+                Search
             </button>
         </div>
 

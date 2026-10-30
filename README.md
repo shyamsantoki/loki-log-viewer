@@ -158,13 +158,16 @@ adding more from the page itself without touching config.
    whatever's filled in - from the configured fields, additional filters, or both - is
    combined with a plain AND. At least one filter needs a value to search; it doesn't
    matter which source it came from.
-2. **Additional filters.** Click **+ Add filter** to add a row where both the field
-   name and the value are free text with autocomplete (the field-name dropdown lists
-   every label Loki knows about, scoped the same way). Use this for anything not worth
-   permanently adding to `SearchFields` - a one-off filter, or a label nobody thought to
-   configure. If an additional filter names the same label as a configured field, the
-   additional filter's value wins.
-3. **Time range and result limit**, then **Search logs**.
+2. **Additional filters.** Click **+** to add a row where both the field name and the
+   value are free text with autocomplete (the field-name dropdown lists every label
+   Loki knows about, scoped the same way). Use this for anything not worth permanently
+   adding to `SearchFields` - a one-off filter, or a label nobody thought to configure.
+   If an additional filter names the same label as a configured field, the additional
+   filter's value wins.
+3. **Since** (time range) and **Limit**, then **Search**. All of this - the configured
+   fields, additional filters, time range, limit, and the Search button - lives in one
+   compact toolbar row, not separate boxed sections, to leave as much room as possible
+   for the results below.
 4. **Results**, as a Time + Message table by default. The left sidebar lists every
    label and every JSON key discovered in the loaded log lines (parsing each line's body
    as JSON when it is JSON) as checkboxes - check one to add it as a column. A level
