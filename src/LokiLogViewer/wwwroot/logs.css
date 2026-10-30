@@ -1,5 +1,6 @@
 /* Log viewer: toolbar + results, layered on top of Bootstrap. Kept deliberately compact - the
-   toolbar is one dense row and everything below it is the log results, not boxed sections. */
+   toolbar is one dense row and everything below it is the log results, not boxed sections.
+   Font sizes use the --fs-label/--fs-body scale defined in app.css. */
 
 .logs-layout {
     display: flex;
@@ -24,23 +25,22 @@
     border: 1px solid #e3e6ea;
     border-radius: 0.35rem;
     padding: 0.5rem 0.65rem;
-    font-size: 0.8rem;
+    font-size: var(--fs-body);
 }
 
 .fields-sidebar-title {
-    font-size: 0.85rem;
     font-weight: 600;
     margin-bottom: 0.15rem;
 }
 
 .fields-sidebar-hint, .fields-sidebar-empty {
-    font-size: 0.72rem;
+    font-size: var(--fs-label);
     color: #6c757d;
     margin-bottom: 0.5rem;
 }
 
 .fields-sidebar-group {
-    font-size: 0.7rem;
+    font-size: var(--fs-label);
     font-weight: 600;
     text-transform: uppercase;
     color: #6c757d;
@@ -51,7 +51,6 @@
     list-style: none;
     margin: 0;
     padding: 0;
-    font-size: 0.78rem;
 }
 
 .fields-sidebar-list li {
@@ -90,7 +89,7 @@
 }
 
 .toolbar-label {
-    font-size: 0.68rem;
+    font-size: var(--fs-label);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -142,14 +141,14 @@
 /* ---- Results ---- */
 
 .results-summary {
-    font-size: 0.8rem;
+    font-size: var(--fs-label);
     color: #6c757d;
     margin-bottom: 0.35rem;
 }
 
 .log-results {
     width: 100%;
-    font-size: 0.82rem;
+    font-size: var(--fs-body);
 }
 
 .log-results th,
@@ -180,7 +179,7 @@
 
 .label-badge {
     display: inline-block;
-    font-size: 0.7rem;
+    font-size: var(--fs-label);
     font-weight: 500;
     background: #eef1f4;
     color: #495057;

@@ -1,3 +1,12 @@
+:root {
+    /* One deliberate type scale for the whole app, instead of ad-hoc one-off sizes:
+       --fs-label for small-caps labels/meta text, --fs-body for everything else (matches
+       Bootstrap's own .form-control-sm/.form-select-sm size, so custom text and form
+       controls read as the same size throughout). */
+    --fs-label: 0.72rem;
+    --fs-body: 0.875rem;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
