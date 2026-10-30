@@ -123,7 +123,11 @@ The filter fields shown on the page come from a `SearchFields` section in
 
 ```json
 "SearchFields": [
-  { "label": "applicationAcronym", "displayName": "Application" },
+  {
+    "label": "applicationAcronym",
+    "displayName": "Application",
+    "values": ["uagaks", "ucsaks", "bmapks"]
+  },
   { "label": "namespace", "displayName": "Namespace" },
   { "label": "container", "displayName": "Container" },
   { "label": "enterprise_system_acronym", "displayName": "Enterprise System" }
@@ -135,18 +139,25 @@ on load from `GET /api/logs/search-fields`) - no client code change needed. The 
 four match the label combination every manually-built query in this project's own HAR
 captures used to find "their app's logs".
 
+An optional `values` array restricts a field to a fixed, known set - it renders as a
+plain dropdown instead of a free-text box with live autocomplete from Loki. This is a
+UI convenience only: the server accepts any value for that label regardless (including
+one typed into an additional filter, below), so updating the list here never risks
+locking out a value that legitimately exists in Loki but hasn't been added to config.
+
 These 4 are a starting point, not a ceiling - see **Additional filters** below for
 adding more from the page itself without touching config.
 
 ## Using the page
 
-1. **Filters.** One input per configured field. Each is a plain text box with an
+1. **Filters.** One input per configured field. Most are a plain text box with an
    autocomplete dropdown of real values for that label (fetched from Loki, scoped to
    whatever other fields already have a value - e.g. picking a namespace narrows the
-   containers suggested next). Leave a field blank to not filter on it; whatever's
-   filled in - from the configured fields, additional filters, or both - is combined
-   with a plain AND. At least one filter needs a value to search; it doesn't matter
-   which source it came from.
+   containers suggested next); a field configured with a fixed `values` list (see
+   above) is a plain `<select>` instead. Leave a field blank to not filter on it;
+   whatever's filled in - from the configured fields, additional filters, or both - is
+   combined with a plain AND. At least one filter needs a value to search; it doesn't
+   matter which source it came from.
 2. **Additional filters.** Click **+ Add filter** to add a row where both the field
    name and the value are free text with autocomplete (the field-name dropdown lists
    every label Loki knows about, scoped the same way). Use this for anything not worth

@@ -2,14 +2,28 @@
 
 <div class="search-field-row">
     <label class="search-field-label" for="@_inputId">@Definition.DisplayName</label>
-    <input id="@_inputId" type="text" class="form-control form-control-sm" list="@_valuesListId"
-           value="@Value" @oninput="OnInput" @onfocus="RefreshValuesAsync" placeholder="any" />
-    <datalist id="@_valuesListId">
-        @foreach (var value in _valueOptions)
-        {
-            <option value="@value"></option>
-        }
-    </datalist>
+
+    @if (Definition.Values is { Count: > 0 } fixedValues)
+    {
+        <select id="@_inputId" class="form-select form-select-sm" @bind:get="Value" @bind:set="OnValueChanged.InvokeAsync">
+            <option value="">any</option>
+            @foreach (var value in fixedValues)
+            {
+                <option value="@value">@value</option>
+            }
+        </select>
+    }
+    else
+    {
+        <input id="@_inputId" type="text" class="form-control form-control-sm" list="@_valuesListId"
+               value="@Value" @oninput="OnInput" @onfocus="RefreshValuesAsync" placeholder="any" />
+        <datalist id="@_valuesListId">
+            @foreach (var value in _valueOptions)
+            {
+                <option value="@value"></option>
+            }
+        </datalist>
+    }
 </div>
 
 @code {
@@ -17,14 +31,16 @@
     [Parameter] public string Value { get; set; } = "";
     [Parameter] public EventCallback<string> OnValueChanged { get; set; }
     // The other fields' current values, used to scope this field's value suggestions (e.g.
-    // picking a namespace narrows the containers offered next).
+    // picking a namespace narrows the containers offered next). Not needed when Definition has
+    // a fixed Values list - there's nothing to fetch or scope.
     [Parameter] public IReadOnlyDictionary<string, string> OtherValues { get; set; } = new Dictionary<string, string>();
 
     private readonly string _inputId = $"field-{Guid.NewGuid():N}";
     private readonly string _valuesListId = $"values-{Guid.NewGuid():N}";
     private IReadOnlyList<string> _valueOptions = [];
 
-    protected override Task OnInitializedAsync() => RefreshValuesAsync();
+    protected override Task OnInitializedAsync() =>
+        Definition.Values is { Count: > 0 } ? Task.CompletedTask : RefreshValuesAsync();
 
     private Task OnInput(ChangeEventArgs e) => OnValueChanged.InvokeAsync(e.Value?.ToString() ?? "");
 
